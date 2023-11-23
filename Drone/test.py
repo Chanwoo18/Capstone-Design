@@ -134,23 +134,9 @@ class FrontEnd(object):
         def lerp(a,b,c):
             return a + c*(b-a)
         
-        # drone_con = self.tl_drone.is_connected()
-        #키입력
-        
-        # self.drone_move()
-        
         count_track = 0
         while not should_stop:
             frame_read = tl_camera.read_cv2_image(strategy="newest")
-            
-                
-            
-            # print(self.tl_drones.get_status("pitch"))
-            # adc = ep_sensor_adaptor.get_adc(id=1, port=1)
-            # print("높이: {0}".format(adc))
-            
-            # fff = ep_sensor_adaptor.get_adc(id=2, port=1)
-            # print("정면: {0}".format(fff))
             
             if frame_read is None:
                 frame_read.stop()
@@ -189,7 +175,7 @@ class FrontEnd(object):
                 should_stop = True
                 break
             
-            #얼굴 탐지
+            #얼굴 탐지(backspace키) //완성도 매우 낮음 (거의 불가능)
             if OVERRIDE and self.drone_fin == True: 
                 for (x, y, w, h) in faces:
                     count_track +=1
@@ -299,6 +285,7 @@ class FrontEnd(object):
             self.movement_history.append(vDistance)
         # print(self.movement_history)
         
+        #x축으로 얼만큼 y축으로 얼만큼 이동
     def drone_move(self, gox, goy):
         self.locx = gox
         self.locy = goy
@@ -306,11 +293,11 @@ class FrontEnd(object):
         #이동 시작시 스레드 시작 이후 이동이 끝나면 스레드 종료(메인에서)
         if self.drone_Finished == False:
             self.drone_Finished == True
-            self.tl_flight.takeoff().wait_for_completed() 
-            # self.tl_flight.forward(distance=120).wait_for_completed()
-            self.tl_flight.go(x=self.locx, y=self.locy, z=50, speed=20).wait_for_completed()
+            self.tl_flight.takeoff().wait_for_completed() #기본 50높이로 뜸 / 뜰때까지 기다림
+            self.tl_flight.forward(distance=self.locx).wait_for_completed() #x만큼만 이동하는중
+            # self.tl_flight.go(x=self.locx, y=self.locy, z=50, speed=20).wait_for_completed() #x,y,z로도 이동가능
             self.tl_flight.land().wait_for_completed()
-            self.drone_fin = True
+            self.drone_fin = True #착지 종료
             # self.movement_history.append([self.locX,self.locY])
     # 복귀 함수
     def return_home(self):
@@ -318,12 +305,13 @@ class FrontEnd(object):
         print("복귀")
         if self.drone_fin == True:
             self.tl_flight.takeoff().wait_for_completed() 
-            self.tl_flight.rotate(angle=-180).wait_for_completed()
-            self.tl_flight.go(x=self.locx, y=self.locy, z=100, speed=20).wait_for_completed()
+            self.tl_flight.rotate(angle=-180).wait_for_completed() #-180도로 회전
+            self.tl_flight.forward(distance=self.locx).wait_for_completed() #이동한만큼 돌아오기
+            # self.tl_flight.go(x=self.locx, y=self.locy, z=100, speed=20).wait_for_completed()
             self.tl_flight.land().wait_for_completed()
             self.drone_return = True
            
-            
+            #이동관련 내용들
         # tl_flight.rotate(angle=180).wait_for_completed() #+-180도회전
         # tl_flight.rotate(angle=-180).wait_for_completed()
         
@@ -403,7 +391,7 @@ def land():
     
     conn = pymysql.connect(host='orion.mokpo.ac.kr',port = 8391, user='remote', password='1234', db='capstone', charset='utf8')
     cursor = conn.cursor()
-    sql = f'''UPDATE DRONE SET dronestate= '복귀완료' WHERE droneid = {dronenum};'''
+    sql = f'''UPDATE DRONE SET dronestate= '대기중' WHERE droneid = {dronenum};'''
     cursor.execute(sql)
     conn.commit()
     conn.close()
