@@ -1,6 +1,5 @@
 from flask import Flask, render_template, Response, request, redirect, url_for,session, flash, jsonify
 import cv2, camera, query, go_login, json
-from weather_search import get_weather_daum, job
 import json
 import requests
 from datetime import date

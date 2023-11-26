@@ -1,18 +1,17 @@
+# -*- coding: utf-8 -*-
 import functools
 import pymysql
 import locale
 import time
 import json
 
-
-
-# 데코레이터 정의 부분 
+# 데코레이터 정의 부분
 def auto_conn_disconn(original_func):
     @functools.wraps(original_func)
     def wrapper(*args, **kwargs):
         
         #이 곳에 쿼리 날리기전 커넥트 
-        conn = pymysql.connect(host='orion.mokpo.ac.kr',port = 8391, user='remote', password='1234', db='capstone', charset='utf8')
+        conn = pymysql.connect(host='orion.mokpo.ac.kr',port = 8398, user='root', password="ScE1234**", db='capstone', charset='utf8')
         cursor = conn.cursor()
         
         
@@ -26,17 +25,14 @@ def auto_conn_disconn(original_func):
         
         # 쿼리 결과 반환
         return query_result
-        
     return wrapper    
 
 @auto_conn_disconn
 def cctv_list(cursor):
     cursor.execute(f"""select placename from CCTV""")
-    
     output = []
     for i in cursor.fetchall():
         output.append(i[0])
-    
     return output
 
 # 이벤트번호, 장소, 발생시간 나오는 쿼리문
@@ -253,3 +249,12 @@ def event_per_placeday_select(cursor, date):
             result[i][1] = tmp[0]
             result[i][2] = tmp[1]
     return result
+
+
+# Test 
+@auto_conn_disconn
+def test(cursor):
+    cursor.execute(f"""select * from USERS""")
+    return cursor.fetchall()
+
+print(test())
